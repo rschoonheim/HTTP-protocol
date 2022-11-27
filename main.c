@@ -15,7 +15,6 @@ int main(int argc, char const *argv[]) {
     /**
      * De HTTP server starten.
      *
-     * TODO: moeten we de HTTP server niet starten in een losse thread?
      */
     int result = http_server_start(configuration);
     if (result != 0) {
