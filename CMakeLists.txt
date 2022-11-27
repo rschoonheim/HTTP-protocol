@@ -3,4 +3,4 @@ project(HTTP_Socket C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(HTTP_Socket main.c)
+add_executable(HTTP_Socket main.c server/server.c server/server.h)
