@@ -1,0 +1,3 @@
+/home/romano/Learning/C/HTTP-Socket/cmake-build-debug/CMakeFiles/HTTP_Socket.dir
+/home/romano/Learning/C/HTTP-Socket/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/romano/Learning/C/HTTP-Socket/cmake-build-debug/CMakeFiles/rebuild_cache.dir
