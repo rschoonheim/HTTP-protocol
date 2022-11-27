@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <arpa/inet.h>
 #include "server.h"
 
 typedef struct http_request_t http_request_t;
@@ -40,6 +41,7 @@ int http_server_start(http_server_configuration_t configuration) {
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(configuration.port);
+    address.sin_zero[0] = '\0';
 
     /**
     * Bind the socket to the address
@@ -59,6 +61,12 @@ int http_server_start(http_server_configuration_t configuration) {
         exit(EXIT_FAILURE);
     }
 
+    char readBuffer[128];
+    char *sendBuffer = "HTTP/1.1 200 OK\r\n"
+                       "Content-Type: text/html\r\n"
+                       "Connection: close\r\n"
+                       "Content-Length: 30\r\n\r\n"
+                       "<html><body>test</body></html>";
 
     int running = 1;
     while (running) {
@@ -74,37 +82,57 @@ int http_server_start(http_server_configuration_t configuration) {
             continue;
         }
 
-        /**
-         * Lees het request van de client.
-         *
-         */
-        char buffer[1024] = {0};
-        read(new_socket, buffer, 1024);
 
         /**
-         * buffer parsen naar een string
+         * Nieuwe thread starten
+         * voor de nieuwe verbinding.
          */
-        char *request = malloc(sizeof(char) * strlen(buffer));
-        strcpy(request, buffer);
+        int pid = fork();
+
+        if (pid == 0) {
+            /**
+             * De verbinding is geaccepteerd.
+             * De verbinding wordt afgesloten
+             * als de client de verbinding verbreekt.
+             */
+            while (1) {
+
+                /**
+                 * Lees het request van de client.
+                 *
+                 */
+                char buffer[1024] = {0};
+                read(new_socket, buffer, 1024);
+
+                /**
+                 * buffer parsen naar een string
+                 */
+                char *request = malloc(sizeof(char) * strlen(buffer));
+                strcpy(request, buffer);
+
+                printf("Request: %s", request);
 
 
-        /**
-         * Handle HTTP/1.1 request
-         *
-         */
-        char readBuffer[128];
-        char *sendBuffer = "HTTP/1.0 200 OK\r\n"
-                           "Content-Type: text/html\r\n"
-                           "Content-Length: 30\r\n\r\n"
-                           "<html><body>test</body></html>";
-        ssize_t status;
+                /**
+                * Handle HTTP/1.1 request
+                *
+                */
 
-        do {
-            status = recv(new_socket, readBuffer, sizeof readBuffer, MSG_DONTWAIT);
-        } while (status > 0);
+                ssize_t status;
+
+                do {
+                    status = recv(new_socket, readBuffer, sizeof readBuffer, MSG_DONTWAIT);
+                } while (status > 0);
+
+                send(new_socket, sendBuffer, (int) strlen(sendBuffer), 0);
 
 
-        send(new_socket, sendBuffer, (int) strlen(sendBuffer), 0);
+                sleep(10);
+            }
+        } else {
+            close(new_socket);
+        }
+
 
     }
 
@@ -113,9 +141,3 @@ int http_server_start(http_server_configuration_t configuration) {
 
 
 
-
-//
-//
-//
-//    return 0;
-//}
